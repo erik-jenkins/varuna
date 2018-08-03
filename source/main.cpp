@@ -8,9 +8,6 @@
 
 #include "../include/ltexture.hpp"
 
-#define max_num(x,y) ((x) >= (y)) ? (x) : (y)
-#define min_num(x,y) ((x) <= (y)) ? (x) : (y)
-
 const int WIDTH  = 600;
 const int HEIGHT = 480;
 
@@ -20,10 +17,6 @@ void close();
 
 SDL_Window* gWindow = nullptr;
 SDL_Renderer* gRenderer = nullptr;
-
-LTexture gBackgroundTexture;
-
-SDL_Rect gSpriteClips[4];
 
 int main()
 {
@@ -40,9 +33,8 @@ int main()
     bool quit = false;
     SDL_Event event;
 
-    uint8_t r = 255;
-    uint8_t g = 255;
-    uint8_t b = 255;
+    uint8_t fadeInAlpha = 0;
+    uint8_t fadeOutAlpha = 255;
 
     while (!quit)
     {
@@ -57,28 +49,35 @@ int main()
                 switch (event.key.keysym.sym)
                 {
                 case SDLK_q:
-                    r += 4;
-                    r = min_num(r, 255);
+                    if (fadeInAlpha + 4 > 255) {
+                        fadeInAlpha = 255;
+                    }
+                    else {
+                        fadeInAlpha += 4;
+                    }
+
+                    if (fadeOutAlpha - 4 < 0) {
+                        fadeOutAlpha = 0;
+                    }
+                    else {
+                        fadeOutAlpha -= 4;
+                    }
                     break;
+
                 case SDLK_a:
-                    r -= 4;
-                    r = max_num(r, 0);
-                    break;
-                case SDLK_w:
-                    g += 4;
-                    g = min_num(g, 255);
-                    break;
-                case SDLK_s:
-                    g -= 4;
-                    g = max_num(g, 0);
-                    break;
-                case SDLK_e:
-                    b += 4;
-                    b = min_num(b, 255);
-                    break;
-                case SDLK_d:
-                    b -= 4;
-                    b = max_num(b, 0);
+                    if (fadeOutAlpha + 4 > 255) {
+                        fadeOutAlpha = 255;
+                    }
+                    else {
+                        fadeOutAlpha += 4;
+                    }
+
+                    if (fadeInAlpha - 4 < 0) {
+                        fadeInAlpha = 0;
+                    }
+                    else {
+                        fadeInAlpha -= 4;
+                    }
                     break;
                 }
             }
@@ -87,8 +86,11 @@ int main()
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
-        gBackgroundTexture.setColor(r, g, b);
-        gBackgroundTexture.render(gRenderer, 0, 0, nullptr);
+        gFadeIn.setAlpha(fadeInAlpha);
+        gFadeOut.setAlpha(fadeOutAlpha);
+
+        gFadeIn.render(gRenderer, 0, 0, nullptr);
+        gFadeOut.render(gRenderer, 0, 0, nullptr);
 
         SDL_RenderPresent(gRenderer);
     }
@@ -144,7 +146,15 @@ bool loadMedia()
 {
     bool success = true;
 
-    success = gBackgroundTexture.loadFromFile(gRenderer, "assets/png/background.png");
+    success = gFadeIn.loadFromFile(gRenderer, "assets/png/fadein.png");
+    if (success) {
+        gFadeIn.setBlendMode(SDL_BLENDMODE_BLEND);
+    }
+
+    success = gFadeOut.loadFromFile(gRenderer, "assets/png/fadeout.png");
+    if (success) {
+        gFadeOut.setBlendMode(SDL_BLENDMODE_BLEND);
+    }
 
     return success;
 }

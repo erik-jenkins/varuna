@@ -55,6 +55,16 @@ void LTexture::setColor(uint8_t red,
                            blue);
 }
 
+void LTexture::setBlendMode(SDL_BlendMode blendMode)
+{
+    SDL_SetTextureBlendMode(texture, blendMode);
+}
+
+void LTexture::setAlpha(uint8_t alpha)
+{
+    SDL_SetTextureAlphaMod(texture, alpha);
+}
+
 int LTexture::getWidth()
 {
     return width;

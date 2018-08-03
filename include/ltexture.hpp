@@ -22,6 +22,9 @@ public:
                   uint8_t green,
                   uint8_t blue);
 
+    void setBlendMode(SDL_BlendMode blendMode);
+    void setAlpha(uint8_t alpha);
+
     int getWidth();
     int getHeight();
 
