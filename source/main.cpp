@@ -18,6 +18,11 @@ void close();
 SDL_Window* gWindow = nullptr;
 SDL_Renderer* gRenderer = nullptr;
 
+LTexture gWalking;
+
+const int WALKING_ANIMATION_FRAMES = 4;
+SDL_Rect gSpriteClips[WALKING_ANIMATION_FRAMES];
+
 int main()
 {
     if (!init())
@@ -33,8 +38,7 @@ int main()
     bool quit = false;
     SDL_Event event;
 
-    uint8_t fadeInAlpha = 0;
-    uint8_t fadeOutAlpha = 255;
+    int frame = 0;
 
     while (!quit)
     {
@@ -44,53 +48,18 @@ int main()
             {
                 quit = true;
             }
-            else if (event.type == SDL_KEYDOWN)
-            {
-                switch (event.key.keysym.sym)
-                {
-                case SDLK_q:
-                    if (fadeInAlpha + 4 > 255) {
-                        fadeInAlpha = 255;
-                    }
-                    else {
-                        fadeInAlpha += 4;
-                    }
-
-                    if (fadeOutAlpha - 4 < 0) {
-                        fadeOutAlpha = 0;
-                    }
-                    else {
-                        fadeOutAlpha -= 4;
-                    }
-                    break;
-
-                case SDLK_a:
-                    if (fadeOutAlpha + 4 > 255) {
-                        fadeOutAlpha = 255;
-                    }
-                    else {
-                        fadeOutAlpha += 4;
-                    }
-
-                    if (fadeInAlpha - 4 < 0) {
-                        fadeInAlpha = 0;
-                    }
-                    else {
-                        fadeInAlpha -= 4;
-                    }
-                    break;
-                }
-            }
         }
 
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
-        gFadeIn.setAlpha(fadeInAlpha);
-        gFadeOut.setAlpha(fadeOutAlpha);
+        SDL_Rect* currentClip = &gSpriteClips[frame/8];
+        gWalking.render(gRenderer,
+                        (WIDTH - currentClip->w)/2,
+                        (HEIGHT - currentClip->h)/2,
+                        currentClip);
 
-        gFadeIn.render(gRenderer, 0, 0, nullptr);
-        gFadeOut.render(gRenderer, 0, 0, nullptr);
+        ++frame %= 32;
 
         SDL_RenderPresent(gRenderer);
     }
@@ -124,7 +93,10 @@ bool init()
     }
 
     // initialize renderer
-    gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED);
+    gRenderer = SDL_CreateRenderer(gWindow,
+                                   -1,
+                                   SDL_RENDERER_ACCELERATED |
+                                   SDL_RENDERER_PRESENTVSYNC);
     if (gRenderer == nullptr)
     {
         std::cout << "Could not initialize renderer! SDL Error: ";
@@ -146,14 +118,28 @@ bool loadMedia()
 {
     bool success = true;
 
-    success = gFadeIn.loadFromFile(gRenderer, "assets/png/fadein.png");
-    if (success) {
-        gFadeIn.setBlendMode(SDL_BLENDMODE_BLEND);
-    }
+    success = gWalking.loadFromFile(gRenderer, "assets/png/walking.png");
+    if (success)
+    {
+        gSpriteClips[0].x = 0;
+        gSpriteClips[0].y = 0;
+        gSpriteClips[0].w = 64;
+        gSpriteClips[0].h = 205;
 
-    success = gFadeOut.loadFromFile(gRenderer, "assets/png/fadeout.png");
-    if (success) {
-        gFadeOut.setBlendMode(SDL_BLENDMODE_BLEND);
+        gSpriteClips[1].x = 64;
+        gSpriteClips[1].y = 0;
+        gSpriteClips[1].w = 64;
+        gSpriteClips[1].h = 205;
+
+        gSpriteClips[2].x = 128;
+        gSpriteClips[2].y = 0;
+        gSpriteClips[2].w = 64;
+        gSpriteClips[2].h = 205;
+
+        gSpriteClips[3].x = 196;
+        gSpriteClips[3].y = 0;
+        gSpriteClips[3].w = 64;
+        gSpriteClips[3].h = 205;
     }
 
     return success;
