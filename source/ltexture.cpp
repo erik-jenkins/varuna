@@ -26,7 +26,10 @@ void LTexture::free()
 void LTexture::render(SDL_Renderer* renderer,
                       int x,
                       int y,
-                      SDL_Rect* clip)
+                      SDL_Rect* clip,
+                      double angle,
+                      SDL_Point* center,
+                      SDL_RendererFlip flip)
 {
     SDL_Rect renderQuad = {
         x,
@@ -35,14 +38,19 @@ void LTexture::render(SDL_Renderer* renderer,
         height
     };
 
-
     if (clip != nullptr)
     {
         renderQuad.w = clip->w;
         renderQuad.h = clip->h;
     }
 
-    SDL_RenderCopy(renderer, texture, clip, &renderQuad);
+    SDL_RenderCopyEx(renderer,
+                     texture,
+                     clip,
+                     &renderQuad,
+                     angle,
+                     center,
+                     flip);
 }
 
 void LTexture::setColor(uint8_t red,

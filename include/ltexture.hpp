@@ -16,7 +16,10 @@ public:
     void render(SDL_Renderer* renderer,
                 int x,
                 int y,
-                SDL_Rect* clip);
+                SDL_Rect* clip = nullptr,
+                double angle = 0.0,
+                SDL_Point* center = nullptr,
+                SDL_RendererFlip flip = SDL_FLIP_NONE);
 
     void setColor(uint8_t red,
                   uint8_t green,

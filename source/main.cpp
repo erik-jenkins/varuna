@@ -18,10 +18,7 @@ void close();
 SDL_Window* gWindow = nullptr;
 SDL_Renderer* gRenderer = nullptr;
 
-LTexture gWalking;
-
-const int WALKING_ANIMATION_FRAMES = 4;
-SDL_Rect gSpriteClips[WALKING_ANIMATION_FRAMES];
+LTexture gArrow;
 
 int main()
 {
@@ -38,7 +35,8 @@ int main()
     bool quit = false;
     SDL_Event event;
 
-    int frame = 0;
+    double degrees = 0.0;
+    SDL_RendererFlip flip = SDL_FLIP_NONE;
 
     while (!quit)
     {
@@ -48,18 +46,39 @@ int main()
             {
                 quit = true;
             }
+            else if (event.type == SDL_KEYDOWN)
+            {
+                switch (event.key.keysym.sym)
+                {
+                case SDLK_a:
+                    degrees -= 60;
+                    break;
+                case SDLK_d:
+                    degrees += 60;
+                    break;
+                case SDLK_q:
+                    flip = SDL_FLIP_HORIZONTAL;
+                    break;
+                case SDLK_w:
+                    flip = SDL_FLIP_NONE;
+                    break;
+                case SDLK_e:
+                    flip = SDL_FLIP_VERTICAL;
+                    break;
+                }
+            }
         }
 
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
-        SDL_Rect* currentClip = &gSpriteClips[frame/8];
-        gWalking.render(gRenderer,
-                        (WIDTH - currentClip->w)/2,
-                        (HEIGHT - currentClip->h)/2,
-                        currentClip);
-
-        ++frame %= 32;
+        gArrow.render(gRenderer,
+                      (WIDTH-gArrow.getWidth())/2,
+                      (HEIGHT-gArrow.getHeight())/2,
+                      nullptr,
+                      degrees,
+                      nullptr,
+                      flip);
 
         SDL_RenderPresent(gRenderer);
     }
@@ -118,29 +137,7 @@ bool loadMedia()
 {
     bool success = true;
 
-    success = gWalking.loadFromFile(gRenderer, "assets/png/walking.png");
-    if (success)
-    {
-        gSpriteClips[0].x = 0;
-        gSpriteClips[0].y = 0;
-        gSpriteClips[0].w = 64;
-        gSpriteClips[0].h = 205;
-
-        gSpriteClips[1].x = 64;
-        gSpriteClips[1].y = 0;
-        gSpriteClips[1].w = 64;
-        gSpriteClips[1].h = 205;
-
-        gSpriteClips[2].x = 128;
-        gSpriteClips[2].y = 0;
-        gSpriteClips[2].w = 64;
-        gSpriteClips[2].h = 205;
-
-        gSpriteClips[3].x = 196;
-        gSpriteClips[3].y = 0;
-        gSpriteClips[3].w = 64;
-        gSpriteClips[3].h = 205;
-    }
+    success = gArrow.loadFromFile(gRenderer, "assets/png/arrow.png");
 
     return success;
 }
