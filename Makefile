@@ -2,7 +2,7 @@ CC=clang++
 SOURCES=$(wildcard source/*.cpp)
 OBJECTS=$(addprefix bin/, $(notdir $(SOURCES:.cpp=.o)))
 EXE=bin/varuna
-LIBS=sdl2 SDL2_image
+LIBS=sdl2 SDL2_image SDL2_ttf
 CFLAGS=-std=c++11 -Wall -g -I ./include `pkg-config --cflags $(LIBS)`
 LDFLAGS=`pkg-config --libs --static $(LIBS)`
 MAC_LDFLAGS=-lSOIL -framework Cocoa -framework OpenGL -framework IOKit -framework CoreVideo

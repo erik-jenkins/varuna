@@ -1,10 +1,12 @@
-#pragma once
+#ifndef LTEXTURE_HPP
+#define LTEXTURE_HPP
 
 #include <iostream>
 #include <string>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 
 class LTexture
 {
@@ -31,7 +33,11 @@ public:
     int getWidth();
     int getHeight();
 
-    bool loadFromFile(SDL_Renderer*, std::string path);
+    bool loadFromFile(SDL_Renderer* renderer, std::string path);
+    bool loadFromRenderedText(SDL_Renderer* renderer,
+                              std::string text,
+                              SDL_Color color,
+                              TTF_Font* font);
 
 private:
     SDL_Texture* texture;
@@ -39,3 +45,5 @@ private:
     int width;
     int height;
 };
+
+#endif

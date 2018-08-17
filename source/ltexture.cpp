@@ -114,5 +114,40 @@ bool LTexture::loadFromFile(SDL_Renderer* renderer, std::string path)
 
     SDL_FreeSurface(loadedSurface);
     texture = newTexture;
-    return true;
+    return texture != nullptr;
+}
+
+bool LTexture::loadFromRenderedText(SDL_Renderer* renderer,
+                                    std::string text,
+                                    SDL_Color color,
+                                    TTF_Font* font)
+{
+    free();
+
+    // render text surface
+    SDL_Surface* textSurface = TTF_RenderText_Solid(font,
+                                                    text.c_str(),
+                                                    color);
+    if (textSurface == nullptr)
+    {
+        std::cout << "Unable to render text surface! SDL_ttf Error: ";
+        std::cout << TTF_GetError() << std::endl;
+        return false;
+    }
+
+    // create texture from surface pixels
+    texture = SDL_CreateTextureFromSurface(renderer,
+                                           textSurface);
+    if (texture == nullptr)
+    {
+        std::cout << "Unable to convert text surface to texture! SDL Error: ";
+        std::cout << SDL_GetError() << std::endl;
+        return false;
+    }
+
+    width = textSurface->w;
+    height = textSurface->h;
+
+    SDL_FreeSurface(textSurface);
+    return texture != nullptr;
 }

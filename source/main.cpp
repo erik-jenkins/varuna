@@ -5,6 +5,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 
 #include "../include/ltexture.hpp"
 
@@ -18,7 +19,8 @@ void close();
 SDL_Window* gWindow = nullptr;
 SDL_Renderer* gRenderer = nullptr;
 
-LTexture gArrow;
+TTF_Font* gFont;
+LTexture gTextTexture;
 
 int main()
 {
@@ -35,9 +37,6 @@ int main()
     bool quit = false;
     SDL_Event event;
 
-    double degrees = 0.0;
-    SDL_RendererFlip flip = SDL_FLIP_NONE;
-
     while (!quit)
     {
         while (SDL_PollEvent(&event) != 0)
@@ -46,39 +45,14 @@ int main()
             {
                 quit = true;
             }
-            else if (event.type == SDL_KEYDOWN)
-            {
-                switch (event.key.keysym.sym)
-                {
-                case SDLK_a:
-                    degrees -= 60;
-                    break;
-                case SDLK_d:
-                    degrees += 60;
-                    break;
-                case SDLK_q:
-                    flip = SDL_FLIP_HORIZONTAL;
-                    break;
-                case SDLK_w:
-                    flip = SDL_FLIP_NONE;
-                    break;
-                case SDLK_e:
-                    flip = SDL_FLIP_VERTICAL;
-                    break;
-                }
-            }
         }
 
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
-        gArrow.render(gRenderer,
-                      (WIDTH-gArrow.getWidth())/2,
-                      (HEIGHT-gArrow.getHeight())/2,
-                      nullptr,
-                      degrees,
-                      nullptr,
-                      flip);
+        gTextTexture.render(gRenderer,
+                            (WIDTH-gTextTexture.getWidth())/2,
+                            (HEIGHT-gTextTexture.getHeight())/2);
 
         SDL_RenderPresent(gRenderer);
     }
@@ -128,6 +102,14 @@ bool init()
     {
         std::cout << "SDL_Image could not initialize! SDL_image Error: ";
         std::cout << IMG_GetError() << std::endl;
+        return false;
+    }
+
+    if (TTF_Init() == -1)
+    {
+        std::cout << "SDL_ttf could not initialize! SDL_ttf Error: ";
+        std::cout << TTF_GetError() << std::endl;
+        return false;
     }
 
     return true;
@@ -137,7 +119,23 @@ bool loadMedia()
 {
     bool success = true;
 
-    success = gArrow.loadFromFile(gRenderer, "assets/png/arrow.png");
+    gFont = TTF_OpenFont("assets/ttf/lazy.ttf", 28);
+    if (gFont == nullptr)
+    {
+        std::cout << "Failed to load lazy font! SDL_ttf Error: ";
+        std::cout << TTF_GetError() << std::endl;
+        return false;
+    }
+
+    SDL_Color textColor = {0, 0, 0};
+    success = gTextTexture.loadFromRenderedText(gRenderer,
+                                                "The quick brown fox jumps over the lazy dog",
+                                                textColor,
+                                                gFont);
+    if (!success)
+    {
+        std::cout << "Failed to render text texture!" << std::endl;
+    }
 
     return success;
 }
