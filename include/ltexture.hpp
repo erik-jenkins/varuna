@@ -39,7 +39,7 @@ public:
                               SDL_Color color,
                               TTF_Font* font);
 
-private:
+protected:
     SDL_Texture* texture;
 
     int width;

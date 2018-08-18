@@ -7,7 +7,7 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 
-#include "../include/ltexture.hpp"
+#include "../include/lbutton.hpp"
 
 const int WIDTH  = 600;
 const int HEIGHT = 480;
@@ -16,11 +16,10 @@ bool init();
 bool loadMedia();
 void close();
 
-SDL_Window* gWindow = nullptr;
+SDL_Window*   gWindow   = nullptr;
 SDL_Renderer* gRenderer = nullptr;
 
-TTF_Font* gFont;
-LTexture gTextTexture;
+LButton gButton;
 
 int main()
 {
@@ -37,6 +36,10 @@ int main()
     bool quit = false;
     SDL_Event event;
 
+    // set position of the button
+    gButton.setPosition((WIDTH-gButton.BUTTON_WIDTH)/2,
+                        (HEIGHT-gButton.BUTTON_HEIGHT)/2);
+
     while (!quit)
     {
         while (SDL_PollEvent(&event) != 0)
@@ -45,14 +48,14 @@ int main()
             {
                 quit = true;
             }
+
+            gButton.handleEvent(&event);
         }
 
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
-        gTextTexture.render(gRenderer,
-                            (WIDTH-gTextTexture.getWidth())/2,
-                            (HEIGHT-gTextTexture.getHeight())/2);
+        gButton.render(gRenderer);
 
         SDL_RenderPresent(gRenderer);
     }
@@ -119,22 +122,13 @@ bool loadMedia()
 {
     bool success = true;
 
-    gFont = TTF_OpenFont("assets/ttf/lazy.ttf", 28);
-    if (gFont == nullptr)
-    {
-        std::cout << "Failed to load lazy font! SDL_ttf Error: ";
-        std::cout << TTF_GetError() << std::endl;
-        return false;
-    }
-
-    SDL_Color textColor = {0, 0, 0};
-    success = gTextTexture.loadFromRenderedText(gRenderer,
-                                                "The quick brown fox jumps over the lazy dog",
-                                                textColor,
-                                                gFont);
+    success = gButton.loadFromFile(gRenderer,
+                                   "assets/png/button.png");
     if (!success)
     {
-        std::cout << "Failed to render text texture!" << std::endl;
+        std::cout << "Error loading media! SDL Error: ";
+        std::cout << SDL_GetError() << std::endl;
+        success = false;
     }
 
     return success;
