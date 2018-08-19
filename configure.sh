@@ -15,7 +15,7 @@ echo "Extracting SDL2..."
 tar -xzf SDL2-2.0.8.tar.gz
 
 echo "Installing SDL2..."
-cd SDL2-2.0.8 && ./configure && make && sudo make install
+cd SDL2-2.0.8 && ./configure --prefix=/usr && make && sudo make install
 
 # SDL_image
 echo "Downloading SDL_image..."
@@ -25,7 +25,7 @@ echo "Extracting SDL_image..."
 tar -xzf SDL2_image-2.0.3.tar.gz
 
 echo "Installing SDL_image..."
-cd SDL2_image-2.0.3 && ./configure && make && sudo make install
+cd SDL2_image-2.0.3 && ./configure --prefix=/usr && make && sudo make install
 
 # SDL_ttf
 echo "Downloading SDL_ttf..."
@@ -35,7 +35,7 @@ echo "Extracting SDL_ttf..."
 tar -xzf SDL2_ttf-2.0.14.tar.gz
 
 echo "Installing SDL_ttf..."
-cd SDL2_ttf-2.0.14 && ./configure && make && sudo make install
+cd SDL2_ttf-2.0.14 && ./configure --prefix=/usr && make && sudo make install
 
 cd ..
 rm -r varuna_downloads
