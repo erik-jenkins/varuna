@@ -1,13 +1,12 @@
-#include <cmath>
 #include <iostream>
 #include <string>
-#include <algorithm>
+#include <sstream>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 
-#include "../include/lbutton.hpp"
+#include "../include/ltexture.hpp"
 
 const int WIDTH  = 600;
 const int HEIGHT = 480;
@@ -19,7 +18,8 @@ void close();
 SDL_Window*   gWindow   = nullptr;
 SDL_Renderer* gRenderer = nullptr;
 
-LButton gButton;
+TTF_Font* gFont;
+LTexture gFontTexture;
 
 int main()
 {
@@ -35,10 +35,9 @@ int main()
 
     bool quit = false;
     SDL_Event event;
-
-    // set position of the button
-    gButton.setPosition((WIDTH-gButton.BUTTON_WIDTH)/2,
-                        (HEIGHT-gButton.BUTTON_HEIGHT)/2);
+    Uint32 startTime = 0;
+    std::stringstream timeText;
+    SDL_Color color = {0, 0, 0, 255};
 
     while (!quit)
     {
@@ -48,14 +47,31 @@ int main()
             {
                 quit = true;
             }
+            else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_RETURN)
+            {
+                startTime = SDL_GetTicks();
+            }
+        }
 
-            gButton.handleEvent(&event);
+        timeText.str("");
+        timeText << "Milliseconds since start time: " << SDL_GetTicks() - startTime;
+
+        bool success = gFontTexture.loadFromRenderedText(gRenderer,
+                                                         timeText.str(),
+                                                         color,
+                                                         gFont);
+        if (!success)
+        {
+            std::cout << "Failed to render font texture! SDL Error: ";
+            std::cout << SDL_GetError() << std::endl;
         }
 
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
-        gButton.render(gRenderer);
+        gFontTexture.render(gRenderer,
+                            (WIDTH - gFontTexture.getWidth())/2,
+                            (HEIGHT - gFontTexture.getHeight())/2);
 
         SDL_RenderPresent(gRenderer);
     }
@@ -122,14 +138,19 @@ bool loadMedia()
 {
     bool success = true;
 
-    success = gButton.loadFromFile(gRenderer,
-                                   "assets/png/button.png");
-    if (!success)
+    gFont = TTF_OpenFont("assets/ttf/lazy.ttf", 28);
+    if (gFont == nullptr)
     {
-        std::cout << "Error loading media! SDL Error: ";
-        std::cout << SDL_GetError() << std::endl;
-        success = false;
+        std::cout << "Error loading lazy.ttf! SDL_ttf Error: ";
+        std::cout << TTF_GetError() << std::endl;
+        return false;
     }
+
+    SDL_Color color = {0, 0, 0, 255};
+    gFontTexture.loadFromRenderedText(gRenderer,
+                                      "Press enter to reset start time",
+                                      color,
+                                      gFont);
 
     return success;
 }
