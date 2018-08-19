@@ -2,6 +2,8 @@ language: cpp
 compiler: clang
 
 install:
-  ./configure.sh
+  - echo $PATH
+  - ls /usr/bin
+  - ./configure.sh
 
 script: make test && ./run_tests
