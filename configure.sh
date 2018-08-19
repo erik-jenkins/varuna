@@ -12,36 +12,30 @@ echo "Downloading SDL2..."
 wget https://www.libsdl.org/release/SDL2-2.0.8.tar.gz
 
 echo "Extracting SDL2..."
-tar -xzvf SDL2-2.0.8.tar.gz
+tar -xzf SDL2-2.0.8.tar.gz
 
 echo "Installing SDL2..."
-if [ $1 != "DEBUG" ]; then
-    cd SDL2-2.0.8 && ./configure && make && sudo make install
-fi
+cd SDL2-2.0.8 && ./configure && make && sudo make install
 
 # SDL_image
 echo "Downloading SDL_image..."
 wget https://www.libsdl.org/projects/SDL_image/release/SDL2_image-2.0.3.tar.gz
 
 echo "Extracting SDL_image..."
-tar -xzvf SDL2_image-2.0.3.tar.gz
+tar -xzf SDL2_image-2.0.3.tar.gz
 
 echo "Installing SDL_image..."
-if [ $1 != "DEBUG" ]; then
-    cd SDL2_image-2.0.3 && ./configure && make && sudo make install
-fi
+cd SDL2_image-2.0.3 && ./configure && make && sudo make install
 
 # SDL_ttf
 echo "Downloading SDL_ttf..."
 wget https://www.libsdl.org/projects/SDL_ttf/release/SDL2_ttf-2.0.14.tar.gz
 
 echo "Extracting SDL_ttf..."
-tar -xzvf SDL2_ttf-2.0.14.tar.gz
+tar -xzf SDL2_ttf-2.0.14.tar.gz
 
 echo "Installing SDL_ttf..."
-if [ $1 != "DEBUG" ]; then
-    cd SDL2_ttf-2.0.14 && ./configure && make && sudo make install
-fi
+cd SDL2_ttf-2.0.14 && ./configure && make && sudo make install
 
 cd ..
 rm -r varuna_downloads
