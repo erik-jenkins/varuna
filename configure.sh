@@ -16,7 +16,7 @@ tar -xzvf SDL2-2.0.8.tar.gz
 
 echo "Installing SDL2..."
 if [ $1 != "DEBUG" ]; then
-    cd SDL2-2.0.8 && ./configure && make && sudo make install
+    cd SDL2-2.0.8 && ./configure --prefix=/usr && make && sudo make install
 fi
 
 # SDL_image
@@ -28,7 +28,7 @@ tar -xzvf SDL2_image-2.0.3.tar.gz
 
 echo "Installing SDL_image..."
 if [ $1 != "DEBUG" ]; then
-    cd SDL2_image-2.0.3 && ./configure && make && sudo make install
+    cd SDL2_image-2.0.3 && ./configure --prefix=/usr && make && sudo make install
 fi
 
 # SDL_ttf
@@ -40,7 +40,7 @@ tar -xzvf SDL2_ttf-2.0.14.tar.gz
 
 echo "Installing SDL_ttf..."
 if [ $1 != "DEBUG" ]; then
-    cd SDL2_ttf-2.0.14 && ./configure && make && sudo make install
+    cd SDL2_ttf-2.0.14 && ./configure --prefix=/usr && make && sudo make install
 fi
 
 cd ..
