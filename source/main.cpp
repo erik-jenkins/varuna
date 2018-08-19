@@ -19,7 +19,8 @@ SDL_Window*   gWindow   = nullptr;
 SDL_Renderer* gRenderer = nullptr;
 
 TTF_Font* gFont;
-LTexture gFontTexture;
+LTexture gResetTimeTexture;
+LTexture gTimeTexture;
 
 int main()
 {
@@ -56,7 +57,7 @@ int main()
         timeText.str("");
         timeText << "Milliseconds since start time: " << SDL_GetTicks() - startTime;
 
-        bool success = gFontTexture.loadFromRenderedText(gRenderer,
+        bool success = gTimeTexture.loadFromRenderedText(gRenderer,
                                                          timeText.str(),
                                                          color,
                                                          gFont);
@@ -69,9 +70,13 @@ int main()
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
-        gFontTexture.render(gRenderer,
-                            (WIDTH - gFontTexture.getWidth())/2,
-                            (HEIGHT - gFontTexture.getHeight())/2);
+        gResetTimeTexture.render(gRenderer,
+                                 (WIDTH - gResetTimeTexture.getWidth())/2,
+                                 0);
+
+        gTimeTexture.render(gRenderer,
+                            (WIDTH - gTimeTexture.getWidth())/2,
+                            (HEIGHT - gTimeTexture.getHeight())/2);
 
         SDL_RenderPresent(gRenderer);
     }
@@ -147,10 +152,10 @@ bool loadMedia()
     }
 
     SDL_Color color = {0, 0, 0, 255};
-    gFontTexture.loadFromRenderedText(gRenderer,
-                                      "Press enter to reset start time",
-                                      color,
-                                      gFont);
+    gResetTimeTexture.loadFromRenderedText(gRenderer,
+                                           "Press enter to reset start time",
+                                           color,
+                                           gFont);
 
     return success;
 }
