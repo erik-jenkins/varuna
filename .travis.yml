@@ -1,2 +1,7 @@
 language: cpp
 compiler: clang
+
+before_install:
+  ./configure.sh
+
+script: make test && ./run_tests
