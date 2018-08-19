@@ -1,4 +1,6 @@
-assets/*
+run_tests
+varuna
+build/*
 bin/*
 *.o
 .dir-locals.el

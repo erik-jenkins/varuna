@@ -1,12 +1,16 @@
 ##### PROJECT SETTINGS ####
 # The name of the executable to be created
 BIN_NAME := varuna
+# The name of the test executable to be created
+TEST_BIN_NAME := run_tests
 # Compiler used
 CXX = clang++
 # Extension of source files used in the project
 SRC_EXT = cpp
 # Path to the source directory, relative to the makefile
 SRC_PATH = source
+# Path to the test directory, relative to the makefile
+TEST_PATH = test
 # Space-separated pkg-config libraries used by this project
 LIBS = sdl2 SDL2_image SDL2_ttf
 # General compiler flags
@@ -15,6 +19,8 @@ COMPILE_FLAGS = -std=c++11 -Wall -Wextra
 RCOMPILE_FLAGS = -D NDEBUG
 # Additional debug-specific flags
 DCOMPILE_FLAGS = -D DEBUG -g
+# Additional test-specific flags
+TCOMPILE_FLAGS = -D DEBUG -g
 # Add additional include paths
 INCLUDES = -I $(SRC_PATH) -I include
 # General linker settings
@@ -23,6 +29,8 @@ LINK_FLAGS =
 RLINK_FLAGS =
 # Additional debug-specific linker settings
 DLINK_FLAGS =
+# Additional test-specific linker settings
+TLINK_FLAGS =
 # Destination directory, like a jail or mounted system
 DESTDIR = /
 # Install path (bin/ is appended automatically)
@@ -71,21 +79,28 @@ release: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS) $(RCOMPILE_FLAGS)
 release: export LDFLAGS := $(LDFLAGS) $(LINK_FLAGS) $(RLINK_FLAGS)
 debug: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS) $(DCOMPILE_FLAGS)
 debug: export LDFLAGS := $(LDFLAGS) $(LINK_FLAGS) $(DLINK_FLAGS)
+test: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS) $(TCOMPILE_FLAGS)
+test: export LDFLAGS := $(LDFLAGS) $(LINK_FLAGS) $(TLINK_FLAGS)
 
 # Build and output paths
 release: export BUILD_PATH := build/release
 release: export BIN_PATH := bin/release
 debug: export BUILD_PATH := build/debug
 debug: export BIN_PATH := bin/debug
+test: export BUILD_PATH := build/test
+test: export BIN_PATH := bin/test
 install: export BIN_PATH := bin/release
 
 # Find all source files in the source directory, sorted by most
 # recently modified
 ifeq ($(UNAME_S),Darwin)
 	SOURCES = $(shell find $(SRC_PATH) -name '*.$(SRC_EXT)' | sort -k 1nr | cut -f2-)
+	TEST_SOURCES = $(shell find $(TEST_PATH) -name '*.$(SRC_EXT)' | sort -k 1nr | cut -f2-)
 else
 	SOURCES = $(shell find $(SRC_PATH) -name '*.$(SRC_EXT)' -printf '%T@\t%p\n' \
 						| sort -k 1nr | cut -f2-)
+	TEST_SOURCES = $(shell find $(TEST_PATH) -name '*.$(SRC_EXT)' -printf '%T@\t%p\n' \
+						     | sort -k 1nr | cut -f2-)
 endif
 
 # fallback in case the above fails
@@ -93,11 +108,14 @@ rwildcard = $(foreach d, $(wildcard $1*), $(call rwildcard,$d/,$2) \
 						$(filter $(subst *,%,$2), $d))
 ifeq ($(SOURCES),)
 	SOURCES := $(call rwildcard, $(SRC_PATH), *.$(SRC_EXT))
+	TEST_SOURCES := $(call rwildcard, $(TEST_PATH), *.$(SRC_EXT))
 endif
 
 # Set the object file names, with the source directory stripped
 # from the path, and the build path prepended in its place
 OBJECTS = $(SOURCES:$(SRC_PATH)/%.$(SRC_EXT)=$(BUILD_PATH)/%.o)
+# Test specific objects
+TEST_OBJECTS = $(filter-out $(BUILD_PATH)/main.o, $(OBJECTS)) $(TEST_SOURCES:$(TEST_PATH)/%.$(SRC_EXT)=$(BUILD_PATH)/%.o)
 # Set the dependency files that will be used to add header dependencies
 DEPS = $(OBJECTS:.o=.d)
 
@@ -168,6 +186,19 @@ endif
 	@echo -n "Total build time: "
 	@$(END_TIME)
 
+# Test build for gdb debugging
+.PHONY: test
+test: dirs
+ifeq ($(USE_VERSION), true)
+	@echo "Beginning test build v$(VERSION_STRING)"
+else
+	@echo "Beginning test build"
+endif
+	@$(START_TIME)
+	@$(MAKE) unit_test --no-print-directory
+	@echo -n "Total build time: "
+	@$(END_TIME)
+
 # Create the directories used in the build
 .PHONY: dirs
 dirs:
@@ -192,6 +223,8 @@ uninstall:
 clean:
 	@echo "Deleting $(BIN_NAME) symlink"
 	@$(RM) $(BIN_NAME)
+	@echo "Deleting $(TEST_BIN_NAME) symlink"
+	@$(RM) $(TEST_BIN_NAME)
 	@echo "Deleting directories"
 	@$(RM) -r build
 	@$(RM) -r bin
@@ -222,3 +255,27 @@ $(BUILD_PATH)/%.o: $(SRC_PATH)/%.$(SRC_EXT)
 	$(CMD_PREFIX)$(CXX) $(CXXFLAGS) $(INCLUDES) -MP -MMD -c $< -o $@
 	@echo -en "\t Compile time: "
 	@$(END_TIME) 	rm -f $(OBJECTS)
+
+# Main test rule, checks the test executable and symlinks to the output
+unit_test: $(BIN_PATH)/$(TEST_BIN_NAME)
+	@echo "Making symlink: $(TEST_BIN_NAME) -> $<"
+	@$(RM) $(TEST_BIN_NAME)
+	@ln -s $(BIN_PATH)/$(TEST_BIN_NAME) $(TEST_BIN_NAME)
+
+# Link the test executable
+$(BIN_PATH)/$(TEST_BIN_NAME): $(TEST_OBJECTS)
+	@echo "Linking: $@"
+	@$(START_TIME)
+	$(CMD_PREFIX)$(CXX) $(TEST_OBJECTS) $(LDFLAGS) -o $@
+	@echo -en "\t Link time: "
+	@$(END_TIME)
+
+# Test source file rules
+# After the first compilation they will be joined with the rules from the
+# dependency files to provide header dependencies
+$(BUILD_PATH)/%.o: $(TEST_PATH)/%.$(SRC_EXT)
+	@echo "Compiling: $< -> $@"
+	@$(START_TIME)
+	$(CMD_PREFIX)$(CXX) $(CXXFLAGS) $(INCLUDES) -MP -MMD -c $< -o $@
+	@echo -en "\t Compile time: "
+	@$(END_TIME) 	rm -f $(TEST_OBJECTS)
