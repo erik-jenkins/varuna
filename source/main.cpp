@@ -1,3 +1,4 @@
+#include <chrono>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -11,6 +12,8 @@
 const int WIDTH  = 600;
 const int HEIGHT = 480;
 
+typedef std::chrono::high_resolution_clock Clock;
+
 bool init();
 bool loadMedia();
 void close();
@@ -19,8 +22,7 @@ SDL_Window*   gWindow   = nullptr;
 SDL_Renderer* gRenderer = nullptr;
 
 TTF_Font* gFont;
-LTexture gResetTimeTexture;
-LTexture gTimeTexture;
+LTexture gFpsFont;
 
 int main()
 {
@@ -36,49 +38,72 @@ int main()
 
     bool quit = false;
     SDL_Event event;
-    Uint32 startTime = 0;
-    std::stringstream timeText;
-    SDL_Color color = {0, 0, 0, 255};
+
+    // timing variables
+    double dt = 0.01;
+    double fps;
+
+    auto currentTime = Clock::now();
+    double accumulator = 0.0;
+
+    int numFrames = 0;
+    std::stringstream fpsStringStream;
 
     while (!quit)
     {
+        // get times
+        auto newTime = Clock::now();
+        double frameTime = (double)std::chrono::duration_cast
+            <std::chrono::milliseconds>(newTime - currentTime).count()/1.0e6f;
+        if (frameTime > 0.25)
+        {
+            frameTime = 0.25;
+        }
+        currentTime = newTime;
+        accumulator += frameTime;
+
+        // calculate FPS
+        fps = numFrames/(SDL_GetTicks()/1000.f);
+        if (fps > 2000000)
+        {
+            fps = 0;
+        }
+
+        fpsStringStream.str("");
+        fpsStringStream << "Average FPS: " << fps;
+        gFpsFont.loadFromRenderedText(gRenderer,
+                                      fpsStringStream.str(),
+                                      {0, 0, 0, 255},
+                                      gFont);
+
+        // handle input
         while (SDL_PollEvent(&event) != 0)
         {
             if (event.type == SDL_QUIT)
             {
                 quit = true;
             }
-            else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_RETURN)
-            {
-                startTime = SDL_GetTicks();
-            }
         }
 
-        timeText.str("");
-        timeText << "Milliseconds since start time: " << SDL_GetTicks() - startTime;
-
-        bool success = gTimeTexture.loadFromRenderedText(gRenderer,
-                                                         timeText.str(),
-                                                         color,
-                                                         gFont);
-        if (!success)
+        while (accumulator > dt)
         {
-            std::cout << "Failed to render font texture! SDL Error: ";
-            std::cout << SDL_GetError() << std::endl;
+            // update(dt)
+            accumulator -= dt;
         }
 
+        const double alpha = accumulator/dt;
+
+        // render(alpha)
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
-        gResetTimeTexture.render(gRenderer,
-                                 (WIDTH - gResetTimeTexture.getWidth())/2,
-                                 0);
-
-        gTimeTexture.render(gRenderer,
-                            (WIDTH - gTimeTexture.getWidth())/2,
-                            (HEIGHT - gTimeTexture.getHeight())/2);
+        gFpsFont.render(gRenderer,
+                        10,
+                        (HEIGHT-gFpsFont.getHeight()));
 
         SDL_RenderPresent(gRenderer);
+
+        numFrames++;
     }
 
     close();
@@ -150,12 +175,6 @@ bool loadMedia()
         std::cout << TTF_GetError() << std::endl;
         return false;
     }
-
-    SDL_Color color = {0, 0, 0, 255};
-    gResetTimeTexture.loadFromRenderedText(gRenderer,
-                                           "Press enter to reset start time",
-                                           color,
-                                           gFont);
 
     return success;
 }
