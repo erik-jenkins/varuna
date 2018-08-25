@@ -9,10 +9,10 @@
 
 #include "../include/ltexture.hpp"
 
+typedef std::chrono::high_resolution_clock Clock;
+
 const int WIDTH  = 600;
 const int HEIGHT = 480;
-
-typedef std::chrono::high_resolution_clock Clock;
 
 bool init();
 bool loadMedia();
@@ -45,8 +45,8 @@ int main()
 
     auto currentTime = Clock::now();
     double accumulator = 0.0;
+    double smoothing = 0.9;
 
-    int numFrames = 0;
     std::stringstream fpsStringStream;
 
     while (!quit)
@@ -54,27 +54,14 @@ int main()
         // get times
         auto newTime = Clock::now();
         double frameTime = (double)std::chrono::duration_cast
-            <std::chrono::milliseconds>(newTime - currentTime).count()/1.0e6f;
+            <std::chrono::microseconds>(newTime - currentTime).count()/1.0e6f;
         if (frameTime > 0.25)
         {
             frameTime = 0.25;
         }
         currentTime = newTime;
         accumulator += frameTime;
-
-        // calculate FPS
-        fps = numFrames/(SDL_GetTicks()/1000.f);
-        if (fps > 2000000)
-        {
-            fps = 0;
-        }
-
-        fpsStringStream.str("");
-        fpsStringStream << "Average FPS: " << fps;
-        gFpsFont.loadFromRenderedText(gRenderer,
-                                      fpsStringStream.str(),
-                                      {0, 0, 0, 255},
-                                      gFont);
+        fps = (fps * smoothing) + (frameTime * (1.0 - smoothing));
 
         // handle input
         while (SDL_PollEvent(&event) != 0)
@@ -101,9 +88,14 @@ int main()
                         10,
                         (HEIGHT-gFpsFont.getHeight()));
 
-        SDL_RenderPresent(gRenderer);
+        fpsStringStream.str("");
+        fpsStringStream << "Average FPS: " << 1.0f/fps;
+        gFpsFont.loadFromRenderedText(gRenderer,
+                                      fpsStringStream.str(),
+                                      {0, 0, 0, 255},
+                                      gFont);
 
-        numFrames++;
+        SDL_RenderPresent(gRenderer);
     }
 
     close();
